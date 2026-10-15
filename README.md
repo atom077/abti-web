@@ -4,6 +4,28 @@ ABTI 是一个面向 AI 时代的人格测试网页原型。它通过显式问�
 
 项目重点不是复刻传统 MBTI，而是把用户使用 AI 时的习惯、偏好、风险和协作方式转化为更具象的人格洞察。
 
+## 版本与分支
+
+本项目保留两个功能版本，可按需选择：
+
+| 版本 | 分支 | 主要内容 |
+| --- | --- | --- |
+| ABTI 正经版 | [`main`](https://github.com/atom077/abti-web/tree/main) | AI 协作行为分析、10 种人物卡与可解释的使用建议。本文介绍此版本。 |
+| ABTI 迷惑版（迷惑行为版） | [`feature/fun-abti-roast`](https://github.com/atom077/abti-web/tree/feature/fun-abti-roast) | 保留正经版并支持模式切换，新增 16 种趣味人格、毒舌/正常文案切换，以及本地生成 PNG 分享图。 |
+
+迷惑版围绕「你怎么用 AI / 怎么跟人协作」展开，包含提示词炼丹师、方案 PPT 仙人、DDL 灵感型选手、全栈背锅侠等类型，作为独立分支保留。
+
+**迷惑版入口：** [浏览代码与 README](https://github.com/atom077/abti-web/tree/feature/fun-abti-roast#readme) · [产品改版计划](https://github.com/atom077/abti-web/blob/feature/fun-abti-roast/docs/PLAN.md) · [查看与 main 的差异](https://github.com/atom077/abti-web/compare/feature/fun-abti-roast?expand=1)
+
+单独下载并运行迷惑版：
+
+```bash
+git clone --branch feature/fun-abti-roast https://github.com/atom077/abti-web.git abti-web-fun
+cd abti-web-fun
+npm ci
+npm run dev
+```
+
 ## 功能特性
 
 - 12 道核心题：覆盖需求表达、纠错方式、目标期待、角色设定、效率偏好、AI Agent 和 vibe coding 等 AI 协作行为。
