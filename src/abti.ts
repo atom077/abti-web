@@ -592,3 +592,620 @@ function buildRelationshipNotes(primary: AbtiType, secondary: AbtiType) {
     `如果对方更像 ${secondary.code}，不要急着纠正风格差异，先确认你们对“好结果”的定义是否一致。`,
   ];
 }
+
+export type FunDimension = "D" | "R" | "S" | "I" | "C" | "L" | "P" | "M";
+export type FunAbtiCode = `${"D" | "R"}${"S" | "I"}${"C" | "L"}${"P" | "M"}`;
+
+export type FunQuestionOption = {
+  id: string;
+  label: string;
+  helper: string;
+  scores: Partial<Record<FunDimension, number>>;
+};
+
+export type FunQuestion = {
+  id: string;
+  title: string;
+  setup: string;
+  options: FunQuestionOption[];
+};
+
+export type FunAbtiType = {
+  code: FunAbtiCode;
+  name: string;
+  nickname: string;
+  oneLiner: string;
+  status: string;
+  tags: string[];
+  symptoms: string[];
+  strengths: string[];
+  sideEffects: string[];
+  aiUsage: string[];
+  aiAvoid: string[];
+  catchphrase: string;
+  normalSummary: string;
+  roastSummary: string;
+  bestPartners: FunAbtiCode[];
+  nemesis: FunAbtiCode[];
+  dangerousCombo: string;
+  shareTitle: string;
+  shareSubtitle: string;
+  accent: string;
+};
+
+export type FunAnalysisResult = {
+  primary: FunAbtiType;
+  dimensionScores: Record<FunDimension, number>;
+  evidence: string[];
+  confidence: number;
+};
+
+const FUN_CODES: FunAbtiCode[] = [
+  "DSCP",
+  "DSCM",
+  "DSLP",
+  "DSLM",
+  "DICP",
+  "DICM",
+  "DILP",
+  "DILM",
+  "RSCP",
+  "RSCM",
+  "RSLP",
+  "RSLM",
+  "RICP",
+  "RICM",
+  "RILP",
+  "RILM",
+];
+
+export const FUN_ABTI_TYPES: Record<FunAbtiCode, FunAbtiType> = {
+  DSCP: {
+    code: "DSCP",
+    name: "提示词炼丹师",
+    nickname: "稳定炼丹中",
+    oneLiner: "你不是在使用 AI，你是在驯服一只不稳定的电子神兽。",
+    status: "每天调 Prompt，偶尔调人生",
+    tags: ["控场", "拆解", "会推进", "能上线"],
+    symptoms: ["一个问题能问 AI 八种版本", "总觉得再优化一下 Prompt 就能封神", "会把同事的模糊需求改写成三层任务树"],
+    strengths: ["能把混乱目标拆成可执行动作", "擅长把 AI 从聊天对象调成生产系统"],
+    sideEffects: ["容易把简单问题炼成一套方法论，让旁边的人怀疑自己是不是没上过班。"],
+    aiUsage: ["拆任务", "生成方案", "压缩信息", "做版本对比"],
+    aiAvoid: ["替你判断老板到底什么意思", "替你承认这件事其实不用这么复杂"],
+    catchphrase: "不是这个意思，你再理解一下。",
+    normalSummary: "你擅长掌控方向、拆解任务，并用 AI 放大自己的执行能力。",
+    roastSummary: "你不是不会做，你只是想先把 Prompt 炼到能自己去开周会。",
+    bestPartners: ["RILP", "RSCP"],
+    nemesis: ["DICM", "DSCM"],
+    dangerousCombo: "两个提示词炼丹师一起开工，第一小时通常都在讨论系统提示词的世界观。",
+    shareTitle: "我是提示词炼丹师",
+    shareSubtitle: "每天调 Prompt，偶尔调人生。",
+    accent: "#e85d36",
+  },
+  DSCM: {
+    code: "DSCM",
+    name: "方案 PPT 仙人",
+    nickname: "方案已三版，项目未开始",
+    oneLiner: "还没开工，方案已经三版了。",
+    status: "在对齐中永生",
+    tags: ["框架感", "共识", "审美", "打磨"],
+    symptoms: ["先搭大纲，再补论证，最后统一字体", "任何想法都能变成一页结论先行", "看到空白页会本能打开 AI 生成目录"],
+    strengths: ["能把复杂问题讲清楚", "适合做方案、汇报和跨团队共识"],
+    sideEffects: ["容易让执行同学产生一种错觉：项目已经快完成了，其实只是标题很完整。"],
+    aiUsage: ["方案结构", "故事线", "汇报话术", "视觉层级"],
+    aiAvoid: ["把一页 PPT 当成真实进度", "用精致措辞掩盖还没想清楚"],
+    catchphrase: "我先拉个框架，大家看方向对不对。",
+    normalSummary: "你擅长建立框架和共识，能把模糊目标变成可讨论的方案。",
+    roastSummary: "你不是拖延，你只是需要先做一套能解释拖延的精美方案。",
+    bestPartners: ["RSLP", "RILP"],
+    nemesis: ["DILP", "DICP"],
+    dangerousCombo: "两个方案 PPT 仙人一起做需求，可能会产出 80 页 deck 和 0 行代码。",
+    shareTitle: "我是方案 PPT 仙人",
+    shareSubtitle: "还没开工，方案已经三版。",
+    accent: "#7c3aed",
+  },
+  DSLP: {
+    code: "DSLP",
+    name: "自动化幻想家",
+    nickname: "重复劳动消灭委员会",
+    oneLiner: "任何重复劳动在你眼里都应该被脚本消灭。",
+    status: "能自动就绝不手动",
+    tags: ["自动化", "单刷", "效率", "交付"],
+    symptoms: ["做三次就想写脚本", "宁愿花两小时自动化一个十分钟任务", "看到手工复制粘贴会产生职业性不适"],
+    strengths: ["能系统性降低团队重复成本", "适合搭工具、流程和内部效率系统"],
+    sideEffects: ["偶尔会为了省一分钟，写出一个下个月才回本的小系统。"],
+    aiUsage: ["写脚本", "批处理", "流程改造", "生成工具雏形"],
+    aiAvoid: ["为了自动化而自动化", "把没人用的工具维护成祖传系统"],
+    catchphrase: "这事不应该人肉做。",
+    normalSummary: "你擅长把重复任务产品化、工具化，让 AI 帮你释放执行效率。",
+    roastSummary: "你不是懒，你只是对重复劳动有一种近乎宗教级别的嫌弃。",
+    bestPartners: ["RSCP", "RSCM"],
+    nemesis: ["RSLM", "DICM"],
+    dangerousCombo: "自动化幻想家遇到不确定性焦虑师，一个想全自动，一个要求每一步人工确认。",
+    shareTitle: "我是自动化幻想家",
+    shareSubtitle: "任何重复劳动都应该被脚本消灭。",
+    accent: "#0ea5e9",
+  },
+  DSLM: {
+    code: "DSLM",
+    name: "细节地狱守门员",
+    nickname: "一个像素都别想逃",
+    oneLiner: "一个像素、一句话、一个边距都逃不过你的眼睛。",
+    status: "正在第 17 次微调",
+    tags: ["标准高", "单刷", "审稿", "打磨"],
+    symptoms: ["能盯着一个按钮看十分钟", "会指出 AI 输出里不够自然的半句话", "经常说最后再改一点点"],
+    strengths: ["能显著提高最终质量", "适合审稿、设计验收和关键交付物打磨"],
+    sideEffects: ["项目最大风险不是做不好，而是你永远觉得它还能更好。"],
+    aiUsage: ["润色", "校对", "质量检查", "边界审查"],
+    aiAvoid: ["在探索期过早进入像素级验收", "把所有同事都变成待修复对象"],
+    catchphrase: "这里感觉还是差一点。",
+    normalSummary: "你对质量和一致性敏感，能守住最终交付的质感。",
+    roastSummary: "你不是强迫症，你只是觉得世界上大部分东西都差一次微调。",
+    bestPartners: ["RSLP", "DILP"],
+    nemesis: ["DICP", "RICP"],
+    dangerousCombo: "两个细节地狱守门员一起做首页，项目可能永远无法上线。",
+    shareTitle: "我是细节地狱守门员",
+    shareSubtitle: "一个像素、一句话都别想逃。",
+    accent: "#2f66d0",
+  },
+  DICP: {
+    code: "DICP",
+    name: "新工具小白鼠",
+    nickname: "今天又换新玩具",
+    oneLiner: "今天 Cursor，明天 Claude，后天又换新玩具。",
+    status: "试用期永不结束",
+    tags: ["尝鲜", "协作", "灵感", "快交付"],
+    symptoms: ["收藏的 AI 工具比真正用的多", "看到新模型发布立刻开测", "经常把团队带进新工作流实验"],
+    strengths: ["能快速发现新工具红利", "适合原型探索和方法更新"],
+    sideEffects: ["容易把稳定工作流搞成工具评测现场。"],
+    aiUsage: ["做原型", "试新模型", "找替代方案", "快速验证想法"],
+    aiAvoid: ["把换工具当成长", "在关键交付前突然迁移全家桶"],
+    catchphrase: "我试了个新工具，感觉很有潜力。",
+    normalSummary: "你开放、行动快，能用新工具快速探索解决路径。",
+    roastSummary: "你不是在工作，你是在用项目经费给 AI 工具做横评。",
+    bestPartners: ["RSCM", "DSLM"],
+    nemesis: ["RSLM", "DSCM"],
+    dangerousCombo: "新工具小白鼠加方案 PPT 仙人，可能先做出一份《为什么我们要迁移到新工具》的方案。",
+    shareTitle: "我是新工具小白鼠",
+    shareSubtitle: "今天一个新模型，明天一个新流程。",
+    accent: "#22c55e",
+  },
+  DICM: {
+    code: "DICM",
+    name: "感觉不对鉴定师",
+    nickname: "说不出，但就是不对",
+    oneLiner: "说不出哪里不对，但就是不对。",
+    status: "凭直觉开验收会",
+    tags: ["直觉", "协作", "审美", "打磨"],
+    symptoms: ["能一眼看出不对，但要组织半天语言", "AI 给的版本越完整，你越想重来", "经常用 vibe 作为验收标准"],
+    strengths: ["对体验和表达质量敏感", "能识别表面完整但内核跑偏的方案"],
+    sideEffects: ["如果不补标准，别人只能在你的感觉宇宙里盲飞。"],
+    aiUsage: ["生成多个版本", "改语气", "找视觉方向", "做风格对比"],
+    aiAvoid: ["让 AI 猜你的感觉", "用一句不对结束所有反馈"],
+    catchphrase: "不是这个 vibe。",
+    normalSummary: "你善于用直觉发现问题，并通过迭代逼近更好的表达。",
+    roastSummary: "你不是没有标准，你的标准只是暂时还没翻译成人类语言。",
+    bestPartners: ["RSCP", "DSLP"],
+    nemesis: ["DSCP", "DILP"],
+    dangerousCombo: "感觉不对鉴定师遇到提示词炼丹师，可能互相逼出第九版。",
+    shareTitle: "我是感觉不对鉴定师",
+    shareSubtitle: "说不出哪里不对，但就是不对。",
+    accent: "#d946ef",
+  },
+  DILP: {
+    code: "DILP",
+    name: "DDL 灵感型选手",
+    nickname: "最后一刻大脑开机",
+    oneLiner: "不到最后一刻，大脑不会正式开机。",
+    status: "距离截止还有 3 小时，状态极佳",
+    tags: ["灵感", "单刷", "爆发", "交付"],
+    symptoms: ["前期看似没动，其实在精神加载", "DDL 越近，AI 对话越密", "能在混乱中突然交出能用版本"],
+    strengths: ["临场爆发力强", "适合短周期冲刺和救急交付"],
+    sideEffects: ["你的节奏看起来像玄学，协作者容易提前开始吸氧。"],
+    aiUsage: ["快速起稿", "补漏", "压缩时间", "生成可用初版"],
+    aiAvoid: ["把所有项目都训练成极限运动", "让 DDL 替你做项目管理"],
+    catchphrase: "别急，我快有感觉了。",
+    normalSummary: "你在压力下启动很快，能借助 AI 把灵感快速变成产出。",
+    roastSummary: "你不是拖延，你是在等大脑和截止日期签署启动协议。",
+    bestPartners: ["DSLM", "RSCM"],
+    nemesis: ["RSLM", "DSCM"],
+    dangerousCombo: "DDL 灵感型选手和不确定性焦虑师合作，一个越晚越兴奋，一个越晚越想报警。",
+    shareTitle: "我是 DDL 灵感型选手",
+    shareSubtitle: "不到最后一刻，大脑不正式开机。",
+    accent: "#f97316",
+  },
+  DILM: {
+    code: "DILM",
+    name: "赛博手艺人",
+    nickname: "灵感要有，抛光也要有",
+    oneLiner: "你相信灵感，也相信最后必须亲手抛光。",
+    status: "AI 出稿，人类收尾",
+    tags: ["创作", "单刷", "质感", "打磨"],
+    symptoms: ["先让 AI 铺开，再自己慢慢修", "对生成味很敏感", "会把 AI 初稿当粗胚而不是成品"],
+    strengths: ["能结合 AI 效率和个人审美", "适合内容、设计、产品体验打磨"],
+    sideEffects: ["你说让 AI 帮忙，最后还是自己坐下来改到深夜。"],
+    aiUsage: ["找方向", "铺初稿", "做风格实验", "辅助润色"],
+    aiAvoid: ["直接发布未经人味校正的内容", "让 AI 抹平你的个人判断"],
+    catchphrase: "这个我自己再收一下。",
+    normalSummary: "你能把 AI 当作创作助推器，同时保留自己的质量判断。",
+    roastSummary: "你不是不信 AI，你只是知道最后背锅的名字不是 AI。",
+    bestPartners: ["RSLP", "RSCP"],
+    nemesis: ["RICP", "DICP"],
+    dangerousCombo: "赛博手艺人和 AI 依赖型打工人合作，可能一边亲手抛光，一边看对方继续生成。",
+    shareTitle: "我是赛博手艺人",
+    shareSubtitle: "AI 出粗胚，我来做人味。",
+    accent: "#14b8a6",
+  },
+  RSCP: {
+    code: "RSCP",
+    name: "需求翻译官",
+    nickname: "老板话实时转译",
+    oneLiner: "你擅长把人话、鬼话、老板话翻译成可执行任务。",
+    status: "正在把“简单做下”翻译成人类需求",
+    tags: ["翻译", "结构", "协作", "交付"],
+    symptoms: ["听到看着做会自动追问验收标准", "能把会议废话提炼成行动项", "经常替 AI 和人类互相补上下文"],
+    strengths: ["能消化不确定需求", "适合做产品、项目推进和跨团队协作"],
+    sideEffects: ["你越会翻译，别人越懒得把话说清楚。"],
+    aiUsage: ["拆需求", "提风险", "转行动项", "写沟通稿"],
+    aiAvoid: ["替所有人承担表达责任", "把老板话过度美化成战略"],
+    catchphrase: "我确认一下，你的意思是不是...",
+    normalSummary: "你擅长建立共识，把模糊输入转换成明确执行。",
+    roastSummary: "你不是在协作，你是在给全公司的人类语言系统打补丁。",
+    bestPartners: ["DSLP", "DILM"],
+    nemesis: ["DICM", "RILM"],
+    dangerousCombo: "需求翻译官遇到全栈背锅侠，最后可能把所有人的锅都翻译成自己的任务。",
+    shareTitle: "我是需求翻译官",
+    shareSubtitle: "把人话、鬼话、老板话翻译成任务。",
+    accent: "#2563eb",
+  },
+  RSCM: {
+    code: "RSCM",
+    name: "会议精神捕手",
+    nickname: "一小时会议榨出三件事",
+    oneLiner: "你能从一小时会议里提炼出三条能干的事。",
+    status: "正在从废话里提纯行动项",
+    tags: ["会议", "结构", "共识", "打磨"],
+    symptoms: ["会议纪要写得比会议本身有逻辑", "喜欢让 AI 整理结论、风险和责任人", "会纠结措辞是否准确表达共识"],
+    strengths: ["能把同步成本转化为推进资产", "适合复盘、纪要、项目管理"],
+    sideEffects: ["容易让同事误以为会议真的很有价值。"],
+    aiUsage: ["会议纪要", "待办拆解", "复盘总结", "风险列表"],
+    aiAvoid: ["用漂亮纪要粉饰低效会议", "把所有讨论都打磨成看似一致"],
+    catchphrase: "我会后整理一下结论。",
+    normalSummary: "你能让沟通沉淀成结构化成果，并推动团队继续前进。",
+    roastSummary: "你不是爱开会，你只是擅长给会议残骸做精装修。",
+    bestPartners: ["DICP", "DILP"],
+    nemesis: ["DSLP", "DILM"],
+    dangerousCombo: "会议精神捕手和自动化幻想家合作，一个想记录所有过程，一个想取消所有会议。",
+    shareTitle: "我是会议精神捕手",
+    shareSubtitle: "一小时会议，三条能干的事。",
+    accent: "#8b5cf6",
+  },
+  RSLP: {
+    code: "RSLP",
+    name: "收到马上改战士",
+    nickname: "嘴上好的，心里又来",
+    oneLiner: "嘴上“好的”，心里“又来？”",
+    status: "在线接需求，离线骂两句",
+    tags: ["响应快", "单刷", "执行", "能交"],
+    symptoms: ["消息回得快，改动也来得快", "AI 是你的临时加班搭子", "能把突发需求先顶住再说"],
+    strengths: ["执行稳定、响应快", "适合临时支援、运营和交付收尾"],
+    sideEffects: ["你越能改，需求越像长了腿一样追着你跑。"],
+    aiUsage: ["快速改稿", "补版本", "套格式", "处理杂活"],
+    aiAvoid: ["用秒回换来无穷无尽的返工", "把所有临时需求都默认接住"],
+    catchphrase: "好的，我改一下。",
+    normalSummary: "你很能响应变化，并借助 AI 快速完成实际交付。",
+    roastSummary: "你不是没有脾气，你只是把脾气都压缩进了“好的”两个字。",
+    bestPartners: ["DSCM", "DSLM"],
+    nemesis: ["DICM", "RSLM"],
+    dangerousCombo: "两个收到马上改战士在一起，可能没人问为什么要改，只剩一片好的。",
+    shareTitle: "我是收到马上改战士",
+    shareSubtitle: "嘴上好的，心里又来。",
+    accent: "#16a34a",
+  },
+  RSLM: {
+    code: "RSLM",
+    name: "不确定性焦虑师",
+    nickname: "变量太多，无法下手",
+    oneLiner: "不是你不想做决定，是变量真的太多。",
+    status: "正在等待第 18 个前置信息",
+    tags: ["谨慎", "单刷", "结构", "打磨"],
+    symptoms: ["开工前想先确认所有边界", "AI 给十个建议，你想知道第十一个风险", "经常在判断前补充更多上下文"],
+    strengths: ["风险意识强", "适合高风险任务、审核和质量控制"],
+    sideEffects: ["你不是没行动，只是行动被你的风险清单暂时扣押了。"],
+    aiUsage: ["风险排查", "边界确认", "决策辅助", "反例推演"],
+    aiAvoid: ["把信息收集当作行动替代品", "要求世界先稳定再开工"],
+    catchphrase: "我再确认几个问题。",
+    normalSummary: "你能提前识别风险和缺口，避免团队在错误方向上冲太快。",
+    roastSummary: "你不是优柔寡断，你只是希望宇宙先提供完整 PRD。",
+    bestPartners: ["DSCP", "RILP"],
+    nemesis: ["DILP", "DICP"],
+    dangerousCombo: "不确定性焦虑师和新工具小白鼠合作，一个不断问风险，一个不断换变量。",
+    shareTitle: "我是不确定性焦虑师",
+    shareSubtitle: "不是不想做决定，是变量真的太多。",
+    accent: "#64748b",
+  },
+  RICP: {
+    code: "RICP",
+    name: "AI 依赖型打工人",
+    nickname: "没有 AI 起手式不会开工",
+    oneLiner: "没有 AI 起手式，你总觉得今天还没开始工作。",
+    status: "先问 AI，再问自己",
+    tags: ["依赖", "灵感", "协作", "交付"],
+    symptoms: ["开文档前先开 AI", "没有参考答案会心里发空", "会让 AI 先给三个方向再决定自己怎么想"],
+    strengths: ["启动速度快", "善于借外部反馈降低空白页压力"],
+    sideEffects: ["AI 不回你时，你像断网的打印机一样安静。"],
+    aiUsage: ["破题", "找参考", "起草", "生成方向"],
+    aiAvoid: ["替你完成独立判断", "把所有空白页恐惧外包"],
+    catchphrase: "我先让 AI 给我几个方向。",
+    normalSummary: "你善于用 AI 降低启动难度，并快速获得行动参考。",
+    roastSummary: "你不是没有主见，你只是需要 AI 先把主见端上桌。",
+    bestPartners: ["DSCP", "RSCP"],
+    nemesis: ["DSLM", "DILM"],
+    dangerousCombo: "AI 依赖型打工人和细节地狱守门员合作，一个不断生成，一个不断退回。",
+    shareTitle: "我是 AI 依赖型打工人",
+    shareSubtitle: "没有 AI 起手式，今天不算开工。",
+    accent: "#06b6d4",
+  },
+  RICM: {
+    code: "RICM",
+    name: "复盘诸葛亮 Pro",
+    nickname: "当时没说，现在全懂了",
+    oneLiner: "当时没说，现在全懂了。",
+    status: "会后智商到账",
+    tags: ["复盘", "灵感", "协作", "打磨"],
+    symptoms: ["事情结束后突然想明白", "喜欢让 AI 帮你复盘为什么会这样", "会把没说出口的话整理成一篇长文"],
+    strengths: ["反思能力强", "适合复盘、经验沉淀和关系修复"],
+    sideEffects: ["你的最佳发言时机经常出现在会议结束后 24 小时。"],
+    aiUsage: ["复盘", "模拟沟通", "总结经验", "补写表达"],
+    aiAvoid: ["用复盘替代现场表达", "把每次遗憾都整理成论文"],
+    catchphrase: "我后来想了一下。",
+    normalSummary: "你擅长在事后提炼模式，让经验转化为下次行动。",
+    roastSummary: "你不是慢半拍，你是把智慧设置成了延迟到账。",
+    bestPartners: ["RSCM", "DILM"],
+    nemesis: ["DILP", "RSLP"],
+    dangerousCombo: "两个复盘诸葛亮 Pro 一起协作，项目结束后会产出非常精彩的下一次建议。",
+    shareTitle: "我是复盘诸葛亮 Pro",
+    shareSubtitle: "当时没说，现在全懂了。",
+    accent: "#a855f7",
+  },
+  RILP: {
+    code: "RILP",
+    name: "线上火灾消防员",
+    nickname: "平时没人想起，出事全来找你",
+    oneLiner: "平时没人想起，出事全来找你。",
+    status: "正在从报警声里找问题",
+    tags: ["救火", "单刷", "灵感", "交付"],
+    symptoms: ["问题越急，你越冷静", "AI 常被你用来查日志、补脚本、写公告", "能先止血再慢慢复盘"],
+    strengths: ["危机处理强", "适合故障排查、运营救急和突发交付"],
+    sideEffects: ["你越能救火，组织越容易忘记买灭火器。"],
+    aiUsage: ["查错", "写应急脚本", "生成排查清单", "拟公告"],
+    aiAvoid: ["把长期结构问题都靠个人救火解决", "让紧急感长期占用生活"],
+    catchphrase: "先止血，别扩大。",
+    normalSummary: "你能在混乱和压力下快速判断优先级，把问题先稳定下来。",
+    roastSummary: "你不是全能，你只是每次都被系统默认成最后一道防线。",
+    bestPartners: ["DSCP", "RSLM"],
+    nemesis: ["DSCM", "DICM"],
+    dangerousCombo: "线上火灾消防员和方案 PPT 仙人合作，一个在灭火，一个在写火灾复盘框架。",
+    shareTitle: "我是线上火灾消防员",
+    shareSubtitle: "平时没人想起，出事全来找你。",
+    accent: "#ef4444",
+  },
+  RILM: {
+    code: "RILM",
+    name: "全栈背锅侠",
+    nickname: "哪里缺人哪里补位",
+    oneLiner: "你不是全栈，你是哪里缺人哪里补位。",
+    status: "正在兼任第 6 个角色",
+    tags: ["补位", "单刷", "灵感", "打磨"],
+    symptoms: ["需求、设计、代码、运营都能接一点", "AI 是你的临时同事、实习生和心理安慰", "经常边学边做边背锅"],
+    strengths: ["适应力强", "能在资源不足时把事情推进到可用状态"],
+    sideEffects: ["你的能力边界越宽，别人的职责边界越模糊。"],
+    aiUsage: ["临时补课", "跨领域起步", "补文案/代码/方案", "做收尾检查"],
+    aiAvoid: ["用能者多劳包装资源不足", "把所有角色都默认为自己来补"],
+    catchphrase: "行，我先顶一下。",
+    normalSummary: "你适应力强，能用 AI 快速补齐陌生领域的基础能力。",
+    roastSummary: "你不是全栈，你只是组织架构里一个可移动的万能补丁。",
+    bestPartners: ["RSCP", "DSLM"],
+    nemesis: ["RSCM", "DSCP"],
+    dangerousCombo: "两个全栈背锅侠一起做项目，最先完成的可能是互相理解对方有多累。",
+    shareTitle: "我是全栈背锅侠",
+    shareSubtitle: "不是全栈，是哪里缺人哪里补位。",
+    accent: "#475569",
+  },
+};
+
+export const FUN_ABTI_QUESTIONS: FunQuestion[] = [
+  {
+    id: "simple-request",
+    title: "老板说：“这个需求很简单，你看着做一下。”",
+    setup: "这句话出现时，办公室温度通常会下降两度。",
+    options: [
+      { id: "ai-risk", label: "先让 AI 拆隐藏需求和风险点", helper: "简单通常只是说的人简单。", scores: { D: 2, S: 2, C: 1, M: 1 } },
+      { id: "ship-first", label: "先做一个能跑的版本", helper: "跑起来，问题才会自己暴露。", scores: { I: 2, L: 1, P: 2 } },
+      { id: "ask-clear", label: "先问目标、边界、验收标准", helper: "没有验收标准，就没有简单需求。", scores: { R: 1, S: 2, C: 2, M: 1 } },
+      { id: "silent", label: "沉默 10 秒，感受危险", helper: "你已经闻到返工的味道。", scores: { R: 2, I: 1, L: 1, M: 2 } },
+    ],
+  },
+  {
+    id: "blank-page",
+    title: "你面对空白文档时，第一反应是？",
+    setup: "空白页不会攻击人，但它会让人怀疑人生。",
+    options: [
+      { id: "prompt-system", label: "给 AI 一套角色和输出格式", helper: "先把工具调成能干活的样子。", scores: { D: 2, S: 2, C: 1, P: 1 } },
+      { id: "ask-directions", label: "让 AI 先给几个方向", helper: "我需要一个起手式。", scores: { R: 2, I: 2, C: 1, P: 1 } },
+      { id: "dump-notes", label: "把碎片想法全丢进去", helper: "先让它从混乱里捞东西。", scores: { D: 1, I: 2, L: 1, P: 1 } },
+      { id: "outline", label: "先列结构和标题层级", helper: "没有骨架的内容很危险。", scores: { S: 2, M: 2, D: 1, C: 1 } },
+    ],
+  },
+  {
+    id: "ai-wrong",
+    title: "AI 一本正经地胡说八道时，你会？",
+    setup: "它语气越自信，你越想查证。",
+    options: [
+      { id: "scold-debug", label: "直接指出错在哪里，让它重来", helper: "先停，别继续扩大事故。", scores: { D: 2, S: 1, L: 1, P: 2 } },
+      { id: "evidence", label: "要求列依据、假设和不确定性", helper: "漂亮话先放一边。", scores: { D: 1, S: 2, C: 1, M: 2 } },
+      { id: "new-angle", label: "换个问法，让它再试一版", helper: "也许是我引导方式不对。", scores: { R: 1, I: 2, C: 2, P: 1 } },
+      { id: "manual", label: "算了，关键部分我自己来", helper: "AI 可以帮忙，但锅不能让它背。", scores: { D: 1, I: 1, L: 2, M: 2 } },
+    ],
+  },
+  {
+    id: "meeting",
+    title: "一小时会议结束，结论像雾一样散了。",
+    setup: "你的大脑开始自动生成会议清洁剂。",
+    options: [
+      { id: "summary", label: "让 AI 整理结论、待办和责任人", helper: "先把雾压缩成三条行动。", scores: { R: 2, S: 2, C: 2, P: 1 } },
+      { id: "no-meeting", label: "想做个自动化流程减少会议", helper: "能异步就别同步。", scores: { D: 2, S: 1, L: 2, P: 1 } },
+      { id: "feel-off", label: "觉得方向不对，但还要再想想", helper: "现在说不清，但确实不对。", scores: { D: 1, I: 2, C: 1, M: 2 } },
+      { id: "fix-now", label: "先把自己负责的部分改了", helper: "别等共识了，先推进。", scores: { R: 1, I: 1, L: 2, P: 2 } },
+    ],
+  },
+  {
+    id: "new-tool",
+    title: "朋友圈都在刷一个新的 AI 工具。",
+    setup: "你看到了，也假装自己还很冷静。",
+    options: [
+      { id: "try-now", label: "马上注册，拿真实任务试一下", helper: "测评要用真问题。", scores: { D: 2, I: 2, C: 1, P: 1 } },
+      { id: "wait-review", label: "先看别人踩坑和最佳实践", helper: "别把项目当试验田。", scores: { R: 2, S: 2, C: 1, M: 1 } },
+      { id: "workflow", label: "想它能不能替掉重复流程", helper: "新工具要么提效，要么别来。", scores: { D: 2, S: 1, L: 1, P: 2 } },
+      { id: "polish", label: "试它的审美、表达和细节能力", helper: "能不能用，要看最终质感。", scores: { D: 1, I: 2, L: 1, M: 2 } },
+    ],
+  },
+  {
+    id: "deadline",
+    title: "DDL 还有 6 小时，你的状态是？",
+    setup: "时间不多，但脑子突然愿意上班了。",
+    options: [
+      { id: "sprint", label: "让 AI 连续起稿、改稿、补漏", helper: "先交，再优化。", scores: { D: 1, I: 2, L: 1, P: 2 } },
+      { id: "triage", label: "先列优先级，只保必须交付项", helper: "控制范围就是保命。", scores: { D: 1, S: 2, C: 1, P: 2 } },
+      { id: "panic-risk", label: "重新确认风险和遗漏", helper: "越急越怕漏东西。", scores: { R: 2, S: 1, L: 1, M: 2 } },
+      { id: "ask-help", label: "找人同步，让 AI 补材料", helper: "现在需要协同救火。", scores: { R: 2, I: 1, C: 2, P: 1 } },
+    ],
+  },
+  {
+    id: "feedback",
+    title: "同事说：“这个版本感觉不太对。”",
+    setup: "一句话，杀伤力取决于后面有没有标准。",
+    options: [
+      { id: "ask-standard", label: "追问哪里不对、期望是什么", helper: "感觉也要翻译成需求。", scores: { R: 1, S: 2, C: 2, M: 1 } },
+      { id: "versions", label: "让 AI 再出三种完全不同的方向", helper: "用版本逼近感觉。", scores: { D: 1, I: 2, C: 1, P: 1 } },
+      { id: "self-polish", label: "自己细修到看着顺眼", helper: "别说了，我懂。", scores: { D: 1, I: 1, L: 2, M: 2 } },
+      { id: "quick-change", label: "先按对方意见改一版", helper: "先响应，别卡住。", scores: { R: 2, I: 1, C: 1, P: 2 } },
+    ],
+  },
+  {
+    id: "agent-code",
+    title: "让 AI Agent 改代码时，你怎么下指令？",
+    setup: "这决定它是同事，还是一台会提交 bug 的老虎机。",
+    options: [
+      { id: "read-plan", label: "先读项目、列计划、再改", helper: "不理解架构就别动手。", scores: { D: 2, S: 2, C: 1, M: 1 } },
+      { id: "bounded", label: "限定文件范围，让它自主推进", helper: "边界清楚就可以放手。", scores: { D: 1, S: 1, L: 1, P: 2 } },
+      { id: "prototype", label: "先做出效果，跑起来再说", helper: "我需要看见东西。", scores: { R: 1, I: 2, L: 1, P: 2 } },
+      { id: "review", label: "改完必须跑测试、看 diff", helper: "能证明没坏才算完成。", scores: { D: 1, S: 2, L: 1, M: 2 } },
+    ],
+  },
+  {
+    id: "collab",
+    title: "多人协作里，你最怕哪种场景？",
+    setup: "协作的本质，有时是互相翻译对方的发疯方式。",
+    options: [
+      { id: "unclear", label: "大家都说懂了，其实没人懂", helper: "共识需要落到行动。", scores: { R: 2, S: 2, C: 2, M: 1 } },
+      { id: "meetings", label: "反复拉会，没人真正动手", helper: "会可以开，活也得干。", scores: { D: 1, S: 1, L: 2, P: 2 } },
+      { id: "random-change", label: "快结束时突然换方向", helper: "这时候改，真的会裂开。", scores: { R: 2, S: 1, C: 1, M: 2 } },
+      { id: "no-space", label: "没有探索空间，只能照单执行", helper: "我需要一点试错空间。", scores: { D: 1, I: 2, L: 1, P: 1 } },
+    ],
+  },
+  {
+    id: "share",
+    title: "你拿到 AI 生成的初稿后，通常会？",
+    setup: "初稿不是成品，是一块还在冒烟的材料。",
+    options: [
+      { id: "publish", label: "能用就先发出去", helper: "后面再迭代。", scores: { R: 1, I: 1, C: 1, P: 2 } },
+      { id: "restructure", label: "重排结构，让逻辑更稳", helper: "先把骨架站住。", scores: { D: 1, S: 2, L: 1, M: 1 } },
+      { id: "humanize", label: "自己改掉生成味", helper: "不能像一碗标准答案。", scores: { D: 1, I: 1, L: 2, M: 2 } },
+      { id: "align", label: "发给相关人确认方向", helper: "别在错误方向上精修。", scores: { R: 2, S: 1, C: 2, P: 1 } },
+    ],
+  },
+  {
+    id: "fallback",
+    title: "AI 突然不可用，你会怎样？",
+    setup: "这是一道关于现代打工人生存能力的题。",
+    options: [
+      { id: "still-work", label: "照常做，只是慢一点", helper: "工具下线，人还在线。", scores: { D: 2, S: 1, L: 1, M: 1 } },
+      { id: "blocked", label: "先找替代工具或等恢复", helper: "没有起手式很难进入状态。", scores: { R: 2, I: 1, C: 1, P: 1 } },
+      { id: "manual-sprint", label: "手动先顶一版", helper: "不能让项目停住。", scores: { R: 1, I: 1, L: 2, P: 2 } },
+      { id: "review-old", label: "翻旧材料和模板慢慢补", helper: "还是要稳。", scores: { R: 1, S: 2, L: 1, M: 2 } },
+    ],
+  },
+  {
+    id: "identity",
+    title: "如果别人问你怎么用 AI，你最像哪句？",
+    setup: "别装，这就是你的 AI 使用人格签名。",
+    options: [
+      { id: "control", label: "我用它拆任务、定方向、提效率", helper: "工具要听懂我的系统。", scores: { D: 2, S: 2, C: 1, P: 1 } },
+      { id: "reference", label: "我先让它给参考，再决定怎么做", helper: "空白页需要外援。", scores: { R: 2, I: 2, C: 1, P: 1 } },
+      { id: "solo", label: "它帮我补位，但最后我自己收口", helper: "关键判断不能外包。", scores: { D: 1, I: 1, L: 2, M: 2 } },
+      { id: "translate", label: "它帮我把人和任务翻译清楚", helper: "协作本来就需要字幕。", scores: { R: 2, S: 1, C: 2, M: 1 } },
+    ],
+  },
+];
+
+const FUN_KEYWORD_RULES: Array<{ pattern: RegExp; scores: Partial<Record<FunDimension, number>>; evidence: string }> = [
+  { pattern: /prompt|提示词|格式|步骤|规则|结构|拆解|验收/g, scores: { D: 2, S: 2, M: 1 }, evidence: "自由输入强调提示词、结构或验收标准" },
+  { pattern: /先给|参考|方向|不会开始|空白|起手|帮我想/g, scores: { R: 2, I: 1, C: 1 }, evidence: "自由输入体现用 AI 降低启动成本" },
+  { pattern: /会议|对齐|同步|沟通|老板|同事|需求|责任人/g, scores: { C: 2, S: 1 }, evidence: "自由输入出现较多协作与需求转译场景" },
+  { pattern: /自己|手动|我来|单独|别开会|异步/g, scores: { L: 2, D: 1 }, evidence: "自由输入偏向单刷和自主收口" },
+  { pattern: /快|马上|先发|上线|交付|能跑|救火|止血/g, scores: { P: 2, I: 1 }, evidence: "自由输入强调速度、交付或救火" },
+  { pattern: /润色|打磨|细节|不对|vibe|感觉|检查|复盘/g, scores: { M: 2, I: 1 }, evidence: "自由输入强调打磨、感觉或复盘" },
+];
+
+export function analyzeFunAbti(answers: Record<string, string>, freeText: string): FunAnalysisResult {
+  const dimensionScores: Record<FunDimension, number> = { D: 0, R: 0, S: 0, I: 0, C: 0, L: 0, P: 0, M: 0 };
+  const evidence = new Set<string>();
+
+  FUN_ABTI_QUESTIONS.forEach((question) => {
+    const answerId = answers[question.id];
+    const option = question.options.find((item) => item.id === answerId);
+    if (!option) return;
+
+    Object.entries(option.scores).forEach(([dimension, score]) => {
+      dimensionScores[dimension as FunDimension] += score ?? 0;
+    });
+    evidence.add(`${question.title}：${option.label}`);
+  });
+
+  FUN_KEYWORD_RULES.forEach((rule) => {
+    const matches = freeText.match(rule.pattern);
+    if (!matches?.length) return;
+
+    Object.entries(rule.scores).forEach(([dimension, score]) => {
+      dimensionScores[dimension as FunDimension] += Math.min(matches.length, 4) * (score ?? 0);
+    });
+    evidence.add(rule.evidence);
+  });
+
+  const code = [
+    dimensionScores.D >= dimensionScores.R ? "D" : "R",
+    dimensionScores.S >= dimensionScores.I ? "S" : "I",
+    dimensionScores.C >= dimensionScores.L ? "C" : "L",
+    dimensionScores.P >= dimensionScores.M ? "P" : "M",
+  ].join("") as FunAbtiCode;
+
+  const answered = Object.values(answers).filter(Boolean).length;
+  const margins =
+    Math.abs(dimensionScores.D - dimensionScores.R) +
+    Math.abs(dimensionScores.S - dimensionScores.I) +
+    Math.abs(dimensionScores.C - dimensionScores.L) +
+    Math.abs(dimensionScores.P - dimensionScores.M);
+  const confidence = Math.min(97, Math.round(44 + answered * 3.4 + Math.min(freeText.trim().length / 50, 10) + margins * 1.7));
+
+  return {
+    primary: FUN_ABTI_TYPES[code] ?? FUN_ABTI_TYPES.DSCP,
+    dimensionScores,
+    evidence: Array.from(evidence).slice(0, 8),
+    confidence,
+  };
+}
+
+export function getFunTypeList() {
+  return FUN_CODES.map((code) => FUN_ABTI_TYPES[code]);
+}
